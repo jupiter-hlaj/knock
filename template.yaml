@@ -94,7 +94,9 @@ Resources:
     Properties:
       Handler: lambda.handler
       CodeUri: .
-      ReservedConcurrentExecutions: 1
+      # ReservedConcurrentExecutions removed — account has insufficient
+      # unreserved concurrency quota. SQLite write safety is handled by
+      # the rate limiter instead. Switch to DynamoDB for true concurrency.
       Timeout: 60
       LoggingConfig:
         LogFormat: JSON
