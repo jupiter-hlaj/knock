@@ -3,7 +3,30 @@
 <head><meta charset="UTF-8"><title>Login — Knock Demo</title></head>
 <body>
   <h1>Login</h1>
-  <p>SDK not yet implemented. See Step 4.</p>
+  <button id="signin">Sign in with passkey</button>
+  <p id="status"></p>
   <a href="/register.html">Register</a>
+
+  <script type="module">
+    import Knock from '/auth/sdk.js';
+    Knock.init({ baseUrl: '/auth' });
+
+    document.getElementById('signin').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      status.textContent = 'Checking...';
+
+      const result = await Knock.authenticate({ userId: 'demo-user' });
+
+      if (result.verified) {
+        status.textContent = `Logged in! UserId: ${result.userId}`;
+      } else if (result.error === 'NO_CREDENTIALS') {
+        status.innerHTML = 'No passkey registered. <a href="/register.html">Register first</a>';
+      } else if (result.error === 'USER_CANCEL') {
+        status.textContent = 'Cancelled. Try again.';
+      } else {
+        status.textContent = `Error: ${result.error || 'Unknown'}`;
+      }
+    });
+  </script>
 </body>
 </html>

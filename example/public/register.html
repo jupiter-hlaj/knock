@@ -3,7 +3,28 @@
 <head><meta charset="UTF-8"><title>Register — Knock Demo</title></head>
 <body>
   <h1>Register</h1>
-  <p>SDK not yet implemented. See Step 4.</p>
+  <button id="register">Register passkey</button>
+  <p id="status"></p>
   <a href="/login.html">Login</a>
+
+  <script type="module">
+    import Knock from '/auth/sdk.js';
+    Knock.init({ baseUrl: '/auth' });
+
+    document.getElementById('register').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      status.textContent = 'Registering...';
+
+      const result = await Knock.register({ userId: 'demo-user', userName: 'Demo User' });
+
+      if (result.registered) {
+        status.innerHTML = 'Passkey registered! <a href="/login.html">Sign in now</a>';
+      } else if (result.error === 'USER_CANCEL') {
+        status.textContent = 'Cancelled.';
+      } else {
+        status.textContent = `Error: ${result.error || 'Unknown'}`;
+      }
+    });
+  </script>
 </body>
 </html>
