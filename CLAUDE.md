@@ -663,7 +663,7 @@ Execute in order. Each step depends on the previous. Update this list when a ste
 - [x] **Step 0** — GitHub repo, AWS OIDC role, `template.yaml` + `samconfig.toml`, GitHub Actions workflows, SAM bootstrap deploy (`/project:step-00`)
 - [x] **Step 1** — Project scaffold, storage abstraction, rate limiting middleware, `lambda.js`; commit + push (`/project:step-01`)
 - [x] **Step 2** — `webauthn.js` + `KnockError`; commit + push → Actions runs tests (`/project:step-02`)
-- [ ] **Step 3** — All four endpoint handlers + two credential management endpoints, wired in `router.js`, endpoint tests; commit + push (`/project:step-03`)
+- [x] **Step 3** — All four endpoint handlers + two credential management endpoints, wired in `router.js`, endpoint tests; commit + push (`/project:step-03`)
 - [ ] **Step 4** — `knock-sdk.js`, updated example HTML pages; commit + push (`/project:step-04`)
 - [ ] **Step 5** — Integration tests, monitoring docs, `README.md` + `ARCHITECTURE.md`; commit + push → Actions deploys to AWS (`/project:step-05`)
 

@@ -67,17 +67,24 @@ class SQLiteStorage extends StorageInterface {
   }
 
   async deleteCredential(db, credentialId, userId) {
-    const result = db.prepare('DELETE FROM credentials WHERE credential_id = ? AND user_id = ?').run(credentialId, userId);
+    let result;
+    if (userId) {
+      result = db.prepare('DELETE FROM credentials WHERE credential_id = ? AND user_id = ?').run(credentialId, userId);
+    } else {
+      result = db.prepare('DELETE FROM credentials WHERE credential_id = ?').run(credentialId);
+    }
     return Promise.resolve({ deletedCount: result.changes });
   }
 
   async listCredentials(db, userId) {
-    const creds = db.prepare('SELECT credential_id, name, registered_at, last_used_at, transports FROM credentials WHERE user_id = ?').all(userId);
+    const creds = db.prepare('SELECT credential_id, user_id, sign_count, name, registered_at, last_used_at, transports FROM credentials WHERE user_id = ?').all(userId);
     return Promise.resolve(creds.map(c => ({
       credentialId: c.credential_id,
-      name: c.name,
+      userId: c.user_id,
       registeredAt: c.registered_at,
       lastUsedAt: c.last_used_at,
+      signCount: c.sign_count,
+      name: c.name,
       transports: JSON.parse(c.transports || '[]'),
     })));
   }

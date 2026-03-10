@@ -3,21 +3,25 @@ const path = require('path');
 const fs = require('fs');
 const rateLimit = require('./middleware/rate-limit');
 
+const registerOptionsHandler = require('./endpoints/register-options');
+const registerVerifyHandler = require('./endpoints/register-verify');
+const authOptionsHandler = require('./endpoints/auth-options');
+const authVerifyHandler = require('./endpoints/auth-verify');
+const credentialsListHandler = require('./endpoints/credentials-list');
+const credentialsRevokeHandler = require('./endpoints/credentials-revoke');
+
 function buildRouter(config, storage, db) {
   const router = express.Router();
 
   router.use(express.json());
   router.use(rateLimit);
 
-  // Endpoint stubs (replaced in Step 3)
-  router.post('/register/options', async (req, res) => res.status(501).json({ error: 'Not implemented' }));
-  router.post('/register/verify', async (req, res) => res.status(501).json({ error: 'Not implemented' }));
-  router.post('/auth/options', async (req, res) => res.status(501).json({ error: 'Not implemented' }));
-  router.post('/auth/verify', async (req, res) => res.status(501).json({ error: 'Not implemented' }));
-
-  // Credential management endpoints
-  router.get('/credentials/:userId', async (req, res) => res.status(501).json({ error: 'Not implemented' }));
-  router.delete('/credentials/:credentialId', async (req, res) => res.status(501).json({ error: 'Not implemented' }));
+  router.post('/register/options', registerOptionsHandler(config, storage, db));
+  router.post('/register/verify', registerVerifyHandler(config, storage, db));
+  router.post('/auth/options', authOptionsHandler(config, storage, db));
+  router.post('/auth/verify', authVerifyHandler(config, storage, db));
+  router.get('/credentials/:userId', credentialsListHandler(config, storage, db));
+  router.delete('/credentials/:credentialId', credentialsRevokeHandler(config, storage, db));
 
   // Serve client SDK
   router.get('/sdk.js', (req, res) => {
