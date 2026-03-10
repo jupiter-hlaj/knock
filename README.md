@@ -38,6 +38,15 @@ The protocol is [WebAuthn Hybrid Transport](https://www.w3.org/TR/webauthn-2/#en
 
 **Cold Start** — First request after 15+ minutes idle takes 2-4 seconds (VPC + EFS mount + SQLite init). Warm requests: 100-300ms. Documented in troubleshooting.
 
+## Prerequisites
+
+Knock is for **Node.js developers only**. If you're building in Python, Go, Java, Ruby, or another runtime, Knock is not the right tool.
+
+Required:
+- Node.js 18+
+- Express 4.x
+- npm or yarn
+
 ## Installation
 
 ```bash
