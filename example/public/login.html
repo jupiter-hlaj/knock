@@ -18,7 +18,15 @@
       const result = await Knock.authenticate({ userId: 'demo-user' });
 
       if (result.verified) {
-        status.textContent = `Logged in! UserId: ${result.userId}`;
+        status.textContent = 'Verified! Creating session...';
+        const session = await fetch('/session/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: result.userId }),
+        }).then(r => r.json());
+
+        document.cookie = `knock_session=${session.sessionId}; path=/`;
+        window.location = '/dashboard';
       } else if (result.error === 'NO_CREDENTIALS') {
         status.innerHTML = 'No passkey registered. <a href="/register.html">Register first</a>';
       } else if (result.error === 'USER_CANCEL') {

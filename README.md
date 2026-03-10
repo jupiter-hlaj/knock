@@ -204,7 +204,7 @@ node --test tests/
 
 # Run local demo
 node example/server.js
-# Visit http://localhost:3000/auth/register.html
+# Visit http://localhost:3000
 ```
 
 All tests use in-memory SQLite (`:memory:`). No fixtures, no cleanup needed.

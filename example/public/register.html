@@ -18,7 +18,8 @@
       const result = await Knock.register({ userId: 'demo-user', userName: 'Demo User' });
 
       if (result.registered) {
-        status.innerHTML = 'Passkey registered! <a href="/login.html">Sign in now</a>';
+        status.textContent = 'Passkey registered! Redirecting...';
+        setTimeout(() => window.location = '/login.html', 800);
       } else if (result.error === 'USER_CANCEL') {
         status.textContent = 'Cancelled.';
       } else {
