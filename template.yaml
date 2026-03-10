@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Knock — Passwordless Auth Demo
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures: [x86_64]
+    MemorySize: 512
+    Timeout: 30
+
+Resources:
+
+  # ── VPC (required for EFS) ────────────────────────────────────────────────
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+
+  SubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+
+  LambdaSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: knock-lambda-sg
+      VpcId: !Ref VPC
+
+  EFSSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: knock-efs-sg
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !GetAtt LambdaSG.GroupId
+
+  # ── EFS (SQLite persistence) ───────────────────────────────────────────────
+
+  KnockFS:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: true
+
+  MountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref KnockFS
+      SubnetId: !Ref SubnetA
+      SecurityGroups: [!Ref EFSSG]
+
+  MountTargetB:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref KnockFS
+      SubnetId: !Ref SubnetB
+      SecurityGroups: [!Ref EFSSG]
+
+  KnockAccessPoint:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: !Ref KnockFS
+      PosixUser:
+        Uid: "1000"
+        Gid: "1000"
+      RootDirectory:
+        Path: /knock
+        CreationInfo:
+          OwnerUid: "1000"
+          OwnerGid: "1000"
+          Permissions: "755"
+
+  # ── Lambda Function ────────────────────────────────────────────────────────
+
+  KnockFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: [MountTargetA, MountTargetB]
+    Properties:
+      Handler: lambda.handler
+      CodeUri: .
+      ReservedConcurrentExecutions: 1
+      Timeout: 60
+      LoggingConfig:
+        LogFormat: JSON
+        LogGroup: !Sub "/aws/lambda/knock-${AWS::StackName}"
+      Environment:
+        Variables:
+          KNOCK_DB_PATH: /mnt/knock/knock.db
+          KNOCK_RP_NAME: Knock Demo
+          KNOCK_STORAGE_TYPE: sqlite
+          KNOCK_LOG_LEVEL: info
+      VpcConfig:
+        SecurityGroupIds: [!Ref LambdaSG]
+        SubnetIds: [!Ref SubnetA, !Ref SubnetB]
+      FileSystemConfigs:
+        - Arn: !GetAtt KnockAccessPoint.Arn
+          LocalMountPath: /mnt/knock
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - elasticfilesystem:ClientMount
+              - elasticfilesystem:ClientWrite
+              - elasticfilesystem:ClientRootAccess
+            Resource: !GetAtt KnockFS.Arn
+        - Statement:
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/knock-${AWS::StackName}:*"
+      Events:
+        AnyPath:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+        Root:
+          Type: HttpApi
+          Properties:
+            Path: /
+            Method: ANY
+
+Outputs:
+  ApiUrl:
+    Description: "Deployed URL — use this to test WebAuthn"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"

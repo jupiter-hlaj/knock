@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "lambda.js"
+      - "template.yaml"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Install SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Build
+        run: sam build --use-container
+
+      - name: Deploy
+        run: sam deploy
+
+      - name: Smoke test
+        run: |
+          API_URL=$(aws cloudformation describe-stacks \
+            --stack-name knock-demo \
+            --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
+            --output text)
+          echo "Deployed to: $API_URL"
+          echo "## Deploy Summary" >> $GITHUB_STEP_SUMMARY
+          echo "URL: $API_URL" >> $GITHUB_STEP_SUMMARY
+          curl --fail --silent $API_URL/health | jq .
