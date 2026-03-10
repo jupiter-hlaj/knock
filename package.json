@@ -1,0 +1,23 @@
+{
+  "name": "@knock-auth/server",
+  "version": "0.1.0",
+  "description": "Self-hosted passkey auth for Express",
+  "main": "src/index.js",
+  "files": ["src/"],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "example": "node example/server.js"
+  },
+  "dependencies": {
+    "@codegenie/serverless-express": "^4.0.0",
+    "@simplewebauthn/server": "^13.0.0",
+    "better-sqlite3": "^12.0.0",
+    "express": "^4.18.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.0.0"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules/
+*.db
+*.db-shm
+*.db-wal
+.env
+.aws-sam/
+.DS_Store
+npm-debug.log*
