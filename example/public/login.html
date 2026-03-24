@@ -1,24 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Login — Knock Demo</title></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Knock Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e0e0e5;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #6e6e73;
+      margin-bottom: 32px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: #1d1d1f;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .primary-btn:hover { background: #3a3a3c; }
+    .primary-btn:disabled { background: #aeaeb2; cursor: not-allowed; }
+
+    #status {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #6e6e73;
+      min-height: 20px;
+    }
+
+    #status.error { color: #ff3b30; }
+
+    .no-creds-banner {
+      margin-top: 16px;
+      background: #f0f7ff;
+      border: 1px solid #c0d8f5;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+    }
+
+    .no-creds-banner .banner-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 4px;
+    }
+
+    .no-creds-banner .banner-body {
+      font-size: 13px;
+      color: #6e6e73;
+      margin-bottom: 12px;
+    }
+
+    .no-creds-banner a {
+      display: inline-block;
+      background: #1d1d1f;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .no-creds-banner a:hover { background: #3a3a3c; }
+
+    .footer {
+      margin-top: 24px;
+      font-size: 14px;
+      color: #6e6e73;
+    }
+
+    .footer a { color: #1d1d1f; font-weight: 500; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
 <body>
-  <h1>Login</h1>
-  <button id="signin">Sign in with passkey</button>
-  <p id="status"></p>
-  <a href="/register.html">Register</a>
+
+  <div class="card">
+    <h1>Knock Demo</h1>
+    <p class="subtitle">Sign in with your passkey</p>
+    <button class="primary-btn" id="signin">Sign in with passkey</button>
+    <p id="status"></p>
+    <p class="footer">No passkey? <a href="/register.html">Register</a></p>
+  </div>
 
   <script type="module">
     import Knock from '/auth/sdk.js';
     Knock.init({ baseUrl: '/auth' });
 
-    document.getElementById('signin').addEventListener('click', async () => {
-      const status = document.getElementById('status');
+    const btn = document.getElementById('signin');
+    const status = document.getElementById('status');
+
+    let userId = localStorage.getItem('knock_userId');
+    if (!userId) {
+      userId = crypto.randomUUID();
+      localStorage.setItem('knock_userId', userId);
+    }
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      status.className = '';
       status.textContent = 'Checking...';
 
-      const result = await Knock.authenticate({ userId: 'demo-user' });
+      const result = await Knock.authenticate({ userId });
 
       if (result.verified) {
-        status.textContent = 'Verified! Creating session...';
+        status.textContent = 'Verified! Redirecting...';
         const session = await fetch('/session/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -28,11 +151,19 @@
         document.cookie = `knock_session=${session.sessionId}; path=/`;
         window.location = '/dashboard';
       } else if (result.error === 'NO_CREDENTIALS') {
-        status.innerHTML = 'No passkey registered. <a href="/register.html">Register first</a>';
+        status.innerHTML = `<div class="no-creds-banner">
+          <div class="banner-title">👋 First time here?</div>
+          <div class="banner-body">No passkey found for this device. Set one up — it only takes a second.</div>
+          <a href="/register.html">Create a passkey</a>
+        </div>`;
+        btn.disabled = false;
       } else if (result.error === 'USER_CANCEL') {
-        status.textContent = 'Cancelled. Try again.';
+        status.textContent = 'Cancelled.';
+        btn.disabled = false;
       } else {
+        status.className = 'error';
         status.textContent = `Error: ${result.error || 'Unknown'}`;
+        btn.disabled = false;
       }
     });
   </script>

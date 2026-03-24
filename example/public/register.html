@@ -1,29 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Register — Knock Demo</title></head>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Knock Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e0e0e5;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #6e6e73;
+      margin-bottom: 32px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: #1d1d1f;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .primary-btn:hover { background: #3a3a3c; }
+    .primary-btn:disabled { background: #aeaeb2; cursor: not-allowed; }
+
+    #status {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #6e6e73;
+      min-height: 20px;
+    }
+
+    #status.error { color: #ff3b30; }
+    #status.success { color: #34c759; }
+
+    .footer {
+      margin-top: 24px;
+      font-size: 14px;
+      color: #6e6e73;
+    }
+
+    .footer a { color: #1d1d1f; font-weight: 500; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
 <body>
-  <h1>Register</h1>
-  <button id="register">Register passkey</button>
-  <p id="status"></p>
-  <a href="/login.html">Login</a>
+
+  <div class="card">
+    <h1>Knock Demo</h1>
+    <p class="subtitle">Register a passkey for this device</p>
+    <button class="primary-btn" id="register">Register passkey</button>
+    <p id="status"></p>
+    <p class="footer">Already registered? <a href="/login.html">Sign in</a></p>
+  </div>
 
   <script type="module">
     import Knock from '/auth/sdk.js';
     Knock.init({ baseUrl: '/auth' });
 
-    document.getElementById('register').addEventListener('click', async () => {
-      const status = document.getElementById('status');
+    const btn = document.getElementById('register');
+    const status = document.getElementById('status');
+
+    let userId = localStorage.getItem('knock_userId');
+    if (!userId) {
+      userId = crypto.randomUUID();
+      localStorage.setItem('knock_userId', userId);
+    }
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      status.className = '';
       status.textContent = 'Registering...';
 
-      const result = await Knock.register({ userId: 'demo-user', userName: 'Demo User' });
+      const result = await Knock.register({ userId, userName: 'Demo User' });
 
       if (result.registered) {
+        status.className = 'success';
         status.textContent = 'Passkey registered! Redirecting...';
         setTimeout(() => window.location = '/login.html', 800);
       } else if (result.error === 'USER_CANCEL') {
         status.textContent = 'Cancelled.';
+        btn.disabled = false;
       } else {
+        status.className = 'error';
         status.textContent = `Error: ${result.error || 'Unknown'}`;
+        btn.disabled = false;
       }
     });
   </script>
