@@ -141,7 +141,7 @@
     }
 
     const { userId } = await sessionRes.json();
-    document.getElementById('welcome').textContent = 'Signed in as Demo User';
+    document.getElementById('welcome').innerHTML = `Signed in as Demo User <br><span style="font-size:12px;color:#aeaeb2;">${userId}</span>`;
 
     const credsRes = await fetch(`/auth/credentials/${userId}`, {
       headers: { Authorization: `Bearer ${sessionId}` }
