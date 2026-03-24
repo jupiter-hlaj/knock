@@ -155,9 +155,8 @@
 
     function inferName(cred) {
       const t = Array.isArray(cred.transports) ? cred.transports : [];
-      if (t.includes('hybrid') && t.includes('internal')) return 'Phone (Face ID / Touch ID)';
       if (t.includes('hybrid')) return 'Phone (passkey)';
-      if (t.includes('internal')) return 'This device (Touch ID / Face ID)';
+      if (t.includes('internal')) return 'This device (passkey)';
       if (t.includes('usb')) return 'Security key (USB)';
       if (t.includes('nfc')) return 'Security key (NFC)';
       return cred.name || 'Passkey';
