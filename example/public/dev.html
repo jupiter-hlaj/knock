@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knock — Passkeys for Express</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #1d1d1f;
+      color: #fff;
+      padding: 28px 48px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 14px;
+      color: #aeaeb2;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      flex: 1;
+    }
+
+    /* --- Demo side --- */
+
+    .demo-side {
+      background: #f5f5f7;
+      padding: 48px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-right: 1px solid #e0e0e5;
+    }
+
+    .side-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #aeaeb2;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e0e0e5;
+      padding: 36px 28px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .card h2 {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      margin-bottom: 6px;
+    }
+
+    .card .subtitle {
+      font-size: 14px;
+      color: #6e6e73;
+      margin-bottom: 24px;
+    }
+
+    .primary-btn {
+      width: 100%;
+      background: #1d1d1f;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .primary-btn:hover { background: #3a3a3c; }
+    .primary-btn:disabled { background: #aeaeb2; cursor: not-allowed; }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #aeaeb2;
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #6e6e73;
+      min-height: 18px;
+    }
+
+    .status.error { color: #ff3b30; }
+    .status.success { color: #34c759; }
+
+    .footer-link {
+      margin-top: 18px;
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    .footer-link a {
+      color: #1d1d1f;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .footer-link a:hover { text-decoration: underline; }
+
+    .welcome-text {
+      text-align: left;
+      margin-bottom: 16px;
+    }
+
+    .welcome-text strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .welcome-text small {
+      font-size: 11px;
+      color: #aeaeb2;
+      word-break: break-all;
+    }
+
+    .cred-card {
+      background: #f5f5f7;
+      border-radius: 10px;
+      padding: 11px 13px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .cred-info strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .cred-info span {
+      font-size: 11px;
+      color: #aeaeb2;
+    }
+
+    .revoke-btn {
+      background: none;
+      border: 1px solid #ff3b30;
+      color: #ff3b30;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .revoke-btn:hover { background: #fff0ef; }
+
+    .sign-out-btn {
+      width: 100%;
+      background: none;
+      border: 1px solid #d0d0d5;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #1d1d1f;
+      margin-top: 8px;
+    }
+
+    .sign-out-btn:hover { background: #f5f5f7; }
+
+    /* --- Code side --- */
+
+    .code-side {
+      background: #0d1117;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #21262d;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .tab {
+      background: none;
+      border: none;
+      color: #8b949e;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+
+    .tab.active {
+      color: #e6edf3;
+      border-bottom-color: #f78166;
+    }
+
+    .tab:hover:not(.active) { color: #c9d1d9; }
+
+    .code-block {
+      padding: 28px 28px 8px;
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    .code-block pre {
+      margin: 0;
+    }
+
+    .code-block code {
+      font-family: 'SF Mono', 'Monaco', 'Menlo', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .hljs { background: transparent !important; }
+
+    .code-caption {
+      padding: 16px 28px 24px;
+      font-size: 12px;
+      color: #6e7681;
+      border-top: 1px solid #21262d;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 800px) {
+      .split { grid-template-columns: 1fr; }
+      header { padding: 20px 24px; }
+      .demo-side { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Knock</h1>
+    <p>Passkey authentication for Express — no passwords, no third parties, no cloud</p>
+  </header>
+
+  <div class="split">
+
+    <div class="demo-side">
+      <div class="side-label">Live demo</div>
+      <div id="demo-card" class="card"></div>
+    </div>
+
+    <div class="code-side">
+      <div class="tabs">
+        <button class="tab active" data-tab="server">Server</button>
+        <button class="tab" data-tab="client-auth">Sign in</button>
+        <button class="tab" data-tab="client-register">Register</button>
+      </div>
+      <div class="code-block">
+        <pre id="code-server"><code class="language-javascript"></code></pre>
+        <pre id="code-client-auth" style="display:none"><code class="language-javascript"></code></pre>
+        <pre id="code-client-register" style="display:none"><code class="language-javascript"></code></pre>
+      </div>
+      <div class="code-caption" id="code-caption"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script type="module">
+    import Knock from '/auth/sdk.js';
+    Knock.init({ baseUrl: '/auth' });
+
+    // ── Code snippets ────────────────────────────────────────────────────────
+
+    const snippets = {
+      server: {
+        code:
+`const { Knock } = require('@knock-auth/server');
+
+const knock = new Knock({
+  rpId:   'acme.com',
+  rpName: 'Acme Corp',
+  origin: 'https://acme.com',
+  dbPath: './knock.db',   // SQLite, auto-created
+});
+
+app.use('/auth', knock.router());`,
+        caption: "That's the entire server setup. SQLite is created automatically on first run."
+      },
+      'client-auth': {
+        code:
+`import Knock from '/auth/sdk.js';
+Knock.init({ baseUrl: '/auth' });
+
+const result = await Knock.authenticate({ userId });
+
+if (result.verified) {
+  // set your session, redirect
+}
+if (result.error === 'NO_CREDENTIALS') {
+  // user hasn't registered yet
+}
+if (result.error === 'USER_CANCEL') {
+  // user dismissed the prompt
+}`,
+        caption: 'Knock.authenticate() handles the full WebAuthn flow — challenge, prompt, verify.'
+      },
+      'client-register': {
+        code:
+`import Knock from '/auth/sdk.js';
+Knock.init({ baseUrl: '/auth' });
+
+const result = await Knock.register({
+  userId,
+  userName: 'jane@acme.com',
+});
+
+if (result.registered) {
+  // passkey saved — send to login
+}`,
+        caption: 'One call to register. The OS handles the biometric prompt.'
+      }
+    };
+
+    Object.entries(snippets).forEach(([key, { code }]) => {
+      const el = document.querySelector(`#code-${key} code`);
+      el.textContent = code;
+      hljs.highlightElement(el);
+    });
+
+    document.getElementById('code-caption').textContent = snippets.server.caption;
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const key = tab.dataset.tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        Object.keys(snippets).forEach(k => {
+          document.getElementById(`code-${k}`).style.display = k === key ? '' : 'none';
+        });
+        document.getElementById('code-caption').textContent = snippets[key].caption;
+      });
+    });
+
+    // ── Demo state machine ───────────────────────────────────────────────────
+
+    const card = document.getElementById('demo-card');
+
+    let userId = localStorage.getItem('knock_userId');
+    if (!userId) {
+      userId = crypto.randomUUID();
+      localStorage.setItem('knock_userId', userId);
+    }
+
+    function getCookie(name) {
+      const v = `; ${document.cookie}`;
+      const p = v.split(`; ${name}=`);
+      if (p.length === 2) return p.pop().split(';').shift();
+    }
+
+    function clearSession() {
+      document.cookie = 'knock_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+
+    function inferName(cred) {
+      const t = Array.isArray(cred.transports) ? cred.transports : [];
+      if (t.includes('internal')) return 'This device';
+      if (t.includes('hybrid'))   return 'Phone';
+      if (t.includes('usb'))      return 'Security key (USB)';
+      if (t.includes('nfc'))      return 'Security key (NFC)';
+      return 'Passkey';
+    }
+
+    function showLogin() {
+      card.innerHTML = `
+        <h2>Knock Demo</h2>
+        <p class="subtitle">Sign in with your passkey</p>
+        <button class="primary-btn" id="signin-btn">Sign in with passkey</button>
+        <p class="hint">Your device will prompt you to verify with a passkey</p>
+        <div class="status" id="status"></div>
+        <p class="footer-link">No passkey? <a id="go-register">Register</a></p>
+      `;
+      document.getElementById('go-register').addEventListener('click', showRegister);
+
+      const btn = document.getElementById('signin-btn');
+      const status = document.getElementById('status');
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        status.className = 'status';
+        status.textContent = 'Checking...';
+
+        const result = await Knock.authenticate({ userId });
+
+        if (result.verified) {
+          status.textContent = 'Verified! Loading...';
+          const session = await fetch('/session/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: result.userId }),
+          }).then(r => r.json());
+          document.cookie = `knock_session=${session.sessionId}; path=/`;
+          showDashboard();
+        } else if (result.error === 'NO_CREDENTIALS') {
+          status.innerHTML = `No passkey found. <a id="reg-link" style="color:#1d1d1f;font-weight:500;cursor:pointer">Register one</a>`;
+          document.getElementById('reg-link').addEventListener('click', showRegister);
+          btn.disabled = false;
+        } else if (result.error === 'USER_CANCEL') {
+          status.textContent = 'Cancelled.';
+          btn.disabled = false;
+        } else {
+          status.className = 'status error';
+          status.textContent = `Error: ${result.error || 'Unknown'}`;
+          btn.disabled = false;
+        }
+      });
+    }
+
+    function showRegister() {
+      card.innerHTML = `
+        <h2>Knock Demo</h2>
+        <p class="subtitle">Register a passkey</p>
+        <button class="primary-btn" id="register-btn">Register passkey</button>
+        <p class="hint">Your device will prompt you to create a passkey</p>
+        <div class="status" id="status"></div>
+        <p class="footer-link">Already registered? <a id="go-login">Sign in</a></p>
+      `;
+      document.getElementById('go-login').addEventListener('click', showLogin);
+
+      const btn = document.getElementById('register-btn');
+      const status = document.getElementById('status');
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        status.className = 'status';
+        status.textContent = 'Registering...';
+
+        const result = await Knock.register({ userId, userName: 'Demo User' });
+
+        if (result.registered) {
+          status.className = 'status success';
+          status.textContent = 'Passkey registered!';
+          setTimeout(showLogin, 800);
+        } else if (result.error === 'USER_CANCEL') {
+          status.textContent = 'Cancelled.';
+          btn.disabled = false;
+        } else {
+          status.className = 'status error';
+          status.textContent = `Error: ${result.error || 'Unknown'}`;
+          btn.disabled = false;
+        }
+      });
+    }
+
+    async function showDashboard() {
+      card.innerHTML = `<div class="status" style="padding:20px 0;text-align:center">Loading...</div>`;
+
+      const sessionId = getCookie('knock_session');
+      const sessionRes = await fetch('/session/me', {
+        headers: { Authorization: `Bearer ${sessionId}` }
+      });
+      if (!sessionRes.ok) { showLogin(); return; }
+
+      const { userId: uid } = await sessionRes.json();
+      const credentials = await fetch(`/auth/credentials/${uid}`, {
+        headers: { Authorization: `Bearer ${sessionId}` }
+      }).then(r => r.json());
+
+      card.innerHTML = `
+        <div class="welcome-text">
+          <strong>Demo User</strong>
+          <small>${uid}</small>
+        </div>
+        <div id="cred-list"></div>
+        <button class="sign-out-btn" id="sign-out-btn">Sign out</button>
+      `;
+
+      const list = document.getElementById('cred-list');
+
+      if (credentials.length === 0) {
+        list.innerHTML = `<p style="font-size:13px;color:#aeaeb2;text-align:left;margin-bottom:12px">No passkeys registered.</p>`;
+      } else {
+        credentials.forEach(cred => {
+          const lastUsed = cred.lastUsedAt
+            ? `Last used ${new Date(cred.lastUsedAt * 1000).toLocaleDateString()}`
+            : `Registered ${new Date(cred.registeredAt * 1000).toLocaleDateString()}`;
+          const div = document.createElement('div');
+          div.className = 'cred-card';
+          div.innerHTML = `
+            <div class="cred-info">
+              <strong>${inferName(cred)}</strong>
+              <span>${lastUsed}</span>
+            </div>
+            <button class="revoke-btn" data-id="${cred.credentialId}">Revoke</button>`;
+          list.appendChild(div);
+        });
+
+        list.querySelectorAll('.revoke-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            await fetch(`/auth/credentials/${btn.dataset.id}`, {
+              method: 'DELETE',
+              headers: { Authorization: `Bearer ${getCookie('knock_session')}` }
+            });
+            clearSession();
+            showLogin();
+          });
+        });
+      }
+
+      document.getElementById('sign-out-btn').addEventListener('click', () => {
+        clearSession();
+        showLogin();
+      });
+    }
+
+    // On load: restore session if cookie exists
+    if (getCookie('knock_session')) {
+      showDashboard();
+    } else {
+      showLogin();
+    }
+  </script>
+</body>
+</html>

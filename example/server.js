@@ -55,7 +55,7 @@ app.get('/dashboard', (req, res) => {
 });
 
 // Root redirect
-app.get('/', (req, res) => res.redirect('/login.html'));
+app.get('/', (req, res) => res.redirect('/dev.html'));
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
