@@ -66,6 +66,12 @@
     #status.error { color: #ff3b30; }
     #status.success { color: #34c759; }
 
+    .hint {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #aeaeb2;
+    }
+
     .footer {
       margin-top: 24px;
       font-size: 14px;
@@ -82,6 +88,7 @@
     <h1>Knock Demo</h1>
     <p class="subtitle">Register a passkey for this device</p>
     <button class="primary-btn" id="register">Register passkey</button>
+    <p class="hint">Your phone or this device will prompt you with Face ID or Touch ID</p>
     <p id="status"></p>
     <p class="footer">Already registered? <a href="/login.html">Sign in</a></p>
   </div>
